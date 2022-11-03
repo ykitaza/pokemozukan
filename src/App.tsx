@@ -1,32 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { getAllPokemon, getPokemon } from './utils/pokemon'
+import { Card } from './components/card'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const initialURL = "https://pokeapi.co/api/v2/pokemon/"
+  const [loading, setLoading] = useState(true)
+  const [pokemonData, setPokemonData] = useState([])
+
+  useEffect(() => {
+    const fetchPokemonData = async () => {
+      const pokemons = await getAllPokemon(initialURL)
+      loadPokemon(pokemons);
+      setLoading(false)
+    }
+    fetchPokemonData()
+  }, [])
+
+  const loadPokemon = async (pokemons: []) => {
+    let _pokemonData = await Promise.all(pokemons.map(async (pokemon) => {
+      const pokemonRecord = await getPokemon(pokemon.url)
+      return pokemonRecord
+    }))
+    setPokemonData(_pokemonData);
+  }
+
+  console.log(pokemonData)
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {loading ? (
+        <h1>ロード中・・・</h1>
+      ) : (
+        <>
+          <div className="pokemonCardContainer">
+            {pokemonData.map((pokemon, i) => {
+                return(
+              //     <>
+              //       <div key ={i}>{pokemon.name}</div>
+              //       <img src={pokemon.sprites.front_default}  />
+              //     </>
+                <Card key={i} pokemon={pokemon} />
+                )
+            })}
+          </div>
+        </>
+      )
+      }
     </div>
   )
 }
